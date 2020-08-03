@@ -1,0 +1,57 @@
+body,
+html {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+}
+
+body,
+html {
+  height: 100%;
+}
+
+#deviceful {
+  width: 100%;
+  height: 66vh;
+}
+
+.container {
+  display: flex;
+  > div {
+    flex: 1 1 0%;
+  }
+  .other {
+    padding: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+  }
+}
+
+.buttons {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  button {
+    background: white;
+    margin: 0 0.5rem;
+    cursor: pointer;
+    transition: 0.2s ease-out;
+    border-radius: 999px;
+    padding: 0.5rem 1rem;
+    border: 1px solid #ddd;
+    outline: none;
+  }
+  button:hover {
+    background: #ddd;
+  }
+}
+
+.content {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem;
+  p {
+    margin-bottom: 1.5rem;
+  }
+}
