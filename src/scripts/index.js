@@ -206,6 +206,7 @@ export default class Deviceful {
     this.renderer.setSize(width, height);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.setPixelRatio(window.devicePixelRatio);
 
     this.el.appendChild(this.renderer.domElement);
     const { lights, floor } = this.theme;
@@ -284,3 +285,63 @@ export default class Deviceful {
     }
   }
 }
+
+// const device = new Deviceful({
+//   device: "laptop",
+//   screenshot: "./public/redgarden.jpg",
+//   screenshotHeight: 2402,
+//   enableFloor: true,
+//   style: "flat",
+//   floor: {
+//     color: "#2D3748",
+//     depth: 20,
+//     shadowOnly: true,
+//     shadowOpacity: 0.2,
+//   },
+// });
+
+// device.mount();
+
+// const toggle = document.getElementById("toggle");
+// const swivelLeft = document.getElementById("swivel_left");
+// const center = document.getElementById("center");
+// const swivelRight = document.getElementById("swivel_right");
+// const scrollUp = document.getElementById("scroll_up");
+// const scrollDown = document.getElementById("scroll_down");
+
+// toggle.addEventListener("click", () => device.toggle(), false);
+// swivelLeft.addEventListener(
+//   "click",
+//   () => {
+//     device.swivel(30, 1500);
+//   },
+//   false
+// );
+// center.addEventListener(
+//   "click",
+//   () => {
+//     device.swivel(0, 300);
+//   },
+//   false
+// );
+// swivelRight.addEventListener(
+//   "click",
+//   () => {
+//     device.swivel(-30, 600, "swingTo");
+//   },
+//   false
+// );
+// scrollUp.addEventListener(
+//   "click",
+//   () => {
+//     device.scroll(2000, "reverse");
+//   },
+//   false
+// );
+// scrollDown.addEventListener(
+//   "click",
+//   () => {
+//     device.scroll(2000);
+//   },
+//   false
+// );
