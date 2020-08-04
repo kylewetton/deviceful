@@ -1,11 +1,13 @@
 {
-  "name": "kw-js-boilerplate",
-  "version": "1.0.0",
-  "description": "JavaScript app boilerplate 2020.",
+  "name": "deviceful",
+  "version": "0.0.1",
+  "description": "Command devices for your designs",
   "scripts": {
     "build": "NODE_ENV=production webpack --config webpack/webpack.config.prod.js  --colors",
     "start": "webpack-dev-server --open --config webpack/webpack.config.dev.js"
   },
+  "main": "src/scripts/index.js",
+  "unpkg": "build/deviceful.min.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/wbkd/webpack-starter.git"

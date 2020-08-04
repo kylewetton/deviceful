@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-const r = "./public/env/studio-a/";
+const r = "node_modules/deviceful/public/env/studio-a/";
 const urls = [
   `${r}px.png`,
   `${r}nx.png`,
@@ -22,9 +22,37 @@ const spaceGray = new THREE.MeshPhysicalMaterial({
   premultipliedAlpha: true,
 });
 
-const spaceBlack = new THREE.MeshPhongMaterial({
-  color: 0x111111,
-  shininess: 0,
+const backWhite = new THREE.MeshPhysicalMaterial({
+  color: "#f5f4eb",
+  envMap: textureCube,
+  metalness: 1,
+  roughness: 0,
+  reflectivity: 2,
+  opacity: 1,
+  envMapIntensity: 2.5,
+  premultipliedAlpha: true,
+});
+
+const chrome = new THREE.MeshPhysicalMaterial({
+  color: "#ffffff",
+  envMap: textureCube,
+  metalness: 1,
+  roughness: 0,
+  reflectivity: 3,
+  opacity: 1,
+  envMapIntensity: 1.5,
+  premultipliedAlpha: true,
+});
+
+const spaceBlack = new THREE.MeshPhysicalMaterial({
+  color: "#333333",
+  envMap: textureCube,
+  metalness: 1,
+  roughness: 0,
+  reflectivity: 2,
+  opacity: 1,
+  envMapIntensity: 3,
+  premultipliedAlpha: true,
 });
 
 const glass = new THREE.MeshPhysicalMaterial({
@@ -54,8 +82,16 @@ const materials = {
     glass,
     camera: blackGloss,
     screen_frame: blackGloss,
-    lip_strip: spaceBlack,
+    lip_strip: blackGloss,
     keyboard: new THREE.MeshPhongMaterial({ color: 0x181c20 }),
+  },
+  phone: {
+    body: chrome,
+    switch: chrome,
+    camera_ring: backWhite,
+    back_camera: spaceBlack,
+    glass,
+    back: backWhite,
   },
 };
 

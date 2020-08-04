@@ -76,6 +76,13 @@ export default class Deviceful {
     this.settings = Object.assign(defaultSettings, settings);
     this.el = document.querySelector(this.settings.parent);
 
+    this.deviceHeight = 900;
+
+    this.deviceScale = {
+      laptop: 1,
+      phone: 0.43,
+    };
+
     this.scene = new THREE.Scene();
     this.camera = null;
     this.renderer = new THREE.WebGLRenderer({
@@ -91,6 +98,7 @@ export default class Deviceful {
   }
 
   mount() {
+    this.deviceHeight = this.settings.device === "phone" ? 1062 : 900;
     const { width, height } = this.getSize();
     this.camera = new THREE.PerspectiveCamera(
       this.settings.camera[this.settings.style].focalLength,
@@ -122,61 +130,76 @@ export default class Deviceful {
 
   addModel() {
     const loader = new GLTFLoader();
-    loader.load(`./public/${this.settings.device}.glb`, (gltf) => {
-      const model = gltf.scene;
-      const { animations } = gltf;
+    loader.load(
+      `node_modules/deviceful/public/${this.settings.device}.glb`,
+      (gltf) => {
+        const model = gltf.scene;
+        const { animations } = gltf;
+        const { device } = this.settings;
+        model.scale.set(
+          this.deviceScale[device],
+          this.deviceScale[device],
+          this.deviceScale[device]
+        );
+        model.position.y = this.settings.camera[
+          this.settings.style
+        ].objectOffset;
+        model.position.x = this.settings.devicePosition;
+        model.rotation.y = ThreeMath.degToRad(this.settings.rotation);
 
-      model.scale.set(1, 1, 1);
-      model.position.y = this.settings.camera[this.settings.style].objectOffset;
-      model.position.x = this.settings.devicePosition;
-      model.rotation.y = ThreeMath.degToRad(this.settings.rotation);
+        model.traverse((o) => {
+          if (o.isMesh) {
+            if (!o.name.includes("glass")) {
+              o.castShadow = true;
+              o.receiveShadow = true;
+            }
 
-      model.traverse((o) => {
-        if (o.isMesh) {
-          o.castShadow = true;
-          o.receiveShadow = true;
-          o.frustumCulled = false;
-          o.material =
-            materials[this.settings.device][o.name.split("0")[0]] ||
-            new THREE.MeshPhongMaterial({ color: 0xff0000 });
-          if (o.name === "screen") {
-            const texture = new THREE.TextureLoader().load(
-              this.settings.screenshot
-            );
+            o.frustumCulled = false;
+            o.material =
+              materials[this.settings.device][o.name.split("0")[0]] ||
+              o.material;
+            if (o.name === "screen") {
+              const texture = new THREE.TextureLoader().load(
+                this.settings.screenshot
+              );
 
-            texture.flipY = false;
-            texture.wrapT = THREE.RepeatWrapping;
-            texture.repeat.x = 1;
-            texture.repeat.y = 900 / this.settings.screenshotHeight;
-            this.texture = texture;
+              texture.flipY = false;
+              texture.wrapT = THREE.RepeatWrapping;
+              texture.repeat.x = 1;
+              texture.repeat.y =
+                this.deviceHeight / this.settings.screenshotHeight;
+              this.texture = texture;
 
-            // immediately use the texture for material creation
-            const screenshot = new THREE.MeshBasicMaterial({ map: texture });
-            o.material = screenshot;
+              // immediately use the texture for material creation
+              const screenshot = new THREE.MeshBasicMaterial({ map: texture });
+              o.material = screenshot;
+            }
           }
+        });
+
+        this.scene.add(model);
+        this.model = model;
+
+        this.mixer = new THREE.AnimationMixer(model);
+
+        this.mixer.addEventListener("finished", () => this.swapTimeScale());
+
+        if (animations.length) {
+          animations.forEach((anim) => {
+            const name = anim.name.toLowerCase();
+            this.animations[name] = anim;
+          });
+          const anim = this.animations.open;
+          const action = this.mixer.clipAction(anim);
+          action.loop = THREE.LoopOnce;
+          action.clampWhenFinished = true;
+          action.timeScale = this.settings.toggleSpeed;
+          this.action = action;
         }
-      });
-      this.scene.add(model);
-      this.model = model;
 
-      this.mixer = new THREE.AnimationMixer(model);
-
-      this.mixer.addEventListener("finished", () => this.swapTimeScale());
-
-      animations.forEach((anim) => {
-        const name = anim.name.toLowerCase();
-        this.animations[name] = anim;
-      });
-
-      const anim = this.animations.open;
-      const action = this.mixer.clipAction(anim);
-      action.loop = THREE.LoopOnce;
-      action.clampWhenFinished = true;
-      action.timeScale = this.settings.toggleSpeed;
-      this.action = action;
-
-      this.settings.onLoad();
-    });
+        this.settings.onLoad();
+      }
+    );
   }
 
   buildScene(width, height) {
@@ -238,15 +261,15 @@ export default class Deviceful {
     }).then(() => callback());
   }
 
-  scroll(direction = "forwards") {
-    const aspect = 900 / this.settings.screenshotHeight;
+  scroll(speed, direction = "forwards") {
+    const aspect = this.deviceHeight / this.settings.screenshotHeight;
     const fromY = direction === "forwards" ? 0 : 1 - aspect;
     const toY = direction === "forwards" ? 1 - aspect : 0;
 
     tween({
       from: { y: fromY },
       to: { y: toY },
-      duration: 2500,
+      duration: speed,
       easing: "easeOutQuad",
       step: (state) => (this.texture.offset.y = state.y),
     });
@@ -261,36 +284,3 @@ export default class Deviceful {
     }
   }
 }
-
-const device = new Deviceful({
-  screenshot: "./public/rialto_full.png",
-  screenshotHeight: 1909,
-  style: "flat",
-  enableFloor: true,
-  floor: {
-    color: "#2D3748",
-    depth: 20,
-    shadowOnly: true,
-    shadowOpacity: 0.2,
-  },
-});
-
-device.mount();
-
-const toggle = document.getElementById("toggle");
-const swivelLeft = document.getElementById("swivel_left");
-const center = document.getElementById("center");
-const swivelRight = document.getElementById("swivel_right");
-const scrollUp = document.getElementById("scroll_up");
-const scrollDown = document.getElementById("scroll_down");
-
-toggle.addEventListener("click", () => device.toggle(), false);
-swivelLeft.addEventListener("click", () => device.swivel(30, 1500), false);
-center.addEventListener("click", () => device.swivel(0, 300), false);
-swivelRight.addEventListener(
-  "click",
-  () => device.swivel(-30, 600, "swingTo"),
-  false
-);
-scrollUp.addEventListener("click", () => device.scroll("reverse"), false);
-scrollDown.addEventListener("click", () => device.scroll(), false);
