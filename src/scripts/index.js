@@ -1,8 +1,8 @@
 import "../styles/index.scss";
 import * as THREE from "three";
 import { Math as ThreeMath } from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { tween } from "shifty";
+import { clock, scene, renderer, camera, loader } from "./runtime";
 import Theme from "./Theme";
 import materials from "./materials";
 
@@ -34,8 +34,6 @@ const defaultTheme = {
     },
   ],
 };
-
-const clock = new THREE.Clock();
 
 export default class Deviceful {
   constructor(settings) {
@@ -83,12 +81,9 @@ export default class Deviceful {
       phone: 0.43,
     };
 
-    this.scene = new THREE.Scene();
+    this.scene = scene;
     this.camera = null;
-    this.renderer = new THREE.WebGLRenderer({
-      alpha: true,
-      antialias: true,
-    });
+    this.renderer = renderer;
     this.loop = this.loop.bind(this);
     this.theme = new Theme(defaultTheme, this.settings.floor);
     this.mixer = null;
@@ -129,7 +124,6 @@ export default class Deviceful {
   }
 
   addModel() {
-    const loader = new GLTFLoader();
     loader.load(
       `node_modules/deviceful/public/${this.settings.device}.glb`,
       (gltf) => {
@@ -170,8 +164,10 @@ export default class Deviceful {
                 this.deviceHeight / this.settings.screenshotHeight;
               this.texture = texture;
 
-              // immediately use the texture for material creation
-              const screenshot = new THREE.MeshBasicMaterial({ map: texture });
+              const screenshot = new THREE.MeshBasicMaterial({
+                map: texture,
+              });
+
               o.material = screenshot;
             }
           }
@@ -198,6 +194,9 @@ export default class Deviceful {
         }
 
         this.settings.onLoad();
+      },
+      function (xhr) {
+        console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
       }
     );
   }
@@ -285,63 +284,3 @@ export default class Deviceful {
     }
   }
 }
-
-// const device = new Deviceful({
-//   device: "laptop",
-//   screenshot: "./public/redgarden.jpg",
-//   screenshotHeight: 2402,
-//   enableFloor: true,
-//   style: "flat",
-//   floor: {
-//     color: "#2D3748",
-//     depth: 20,
-//     shadowOnly: true,
-//     shadowOpacity: 0.2,
-//   },
-// });
-
-// device.mount();
-
-// const toggle = document.getElementById("toggle");
-// const swivelLeft = document.getElementById("swivel_left");
-// const center = document.getElementById("center");
-// const swivelRight = document.getElementById("swivel_right");
-// const scrollUp = document.getElementById("scroll_up");
-// const scrollDown = document.getElementById("scroll_down");
-
-// toggle.addEventListener("click", () => device.toggle(), false);
-// swivelLeft.addEventListener(
-//   "click",
-//   () => {
-//     device.swivel(30, 1500);
-//   },
-//   false
-// );
-// center.addEventListener(
-//   "click",
-//   () => {
-//     device.swivel(0, 300);
-//   },
-//   false
-// );
-// swivelRight.addEventListener(
-//   "click",
-//   () => {
-//     device.swivel(-30, 600, "swingTo");
-//   },
-//   false
-// );
-// scrollUp.addEventListener(
-//   "click",
-//   () => {
-//     device.scroll(2000, "reverse");
-//   },
-//   false
-// );
-// scrollDown.addEventListener(
-//   "click",
-//   () => {
-//     device.scroll(2000);
-//   },
-//   false
-// );
