@@ -6,7 +6,7 @@ import {
   Math as ThreeMath,
   Vector3,
 } from "three";
-import { tween } from "shifty";
+import { Tweenable, Scene as TweenScene, tween } from "shifty";
 import {
   clock,
   scene,
@@ -19,6 +19,7 @@ import {
 } from "./runtime";
 import Theme from "./Theme";
 import materials from "./materials";
+import tweens from "./tweenAnims";
 
 const defaultTheme = {
   lights: [
@@ -51,11 +52,11 @@ export default class Deviceful {
       cameraDistance: null,
       cameraHeight: null,
       devicePosition: 0,
-      animateOnLoad: null,
+      onLoadAnimation: null,
       toggleSpeed: 1,
+      toggleOnLoad: true,
       autoHeight: false,
       screenshotHeight: 900,
-      onLoad: () => {},
       camera: {
         flat: {
           position: { x: 0, y: -2, z: 25 },
@@ -93,12 +94,12 @@ export default class Deviceful {
     this.loop = this.loop.bind(this);
     this.theme = new Theme(defaultTheme, this.settings.floor);
     this.mixer = null;
+    this.tweenMixer = new TweenScene();
     this.animations = {};
-    this.currentlyAnimating = false;
-    this.chainAnim = () => {};
   }
 
   mount() {
+    console.log(tween);
     this.deviceHeight = this.settings.device === "phone" ? 1062 : 900;
     const { width, height } = this.getSize();
     this.camera = camera(
@@ -110,10 +111,28 @@ export default class Deviceful {
 
     this.buildScene(width, height);
     this.addModel();
-    this.loop();
-
     // Event listeners
     window.addEventListener("resize", () => this.resizeWindow());
+  }
+
+  /**
+   * Happens after loading model promise, called inside addModel
+   */
+  init() {
+    this.loop();
+
+    let loadingAnim = this.settings.onLoadAnimation;
+    if (typeof loadingAnim === "string") {
+      loadingAnim = tweens[loadingAnim] || null;
+    }
+
+    if (loadingAnim.length) {
+      this.animate(loadingAnim);
+    }
+
+    if (this.settings.toggleOnLoad) {
+      this.toggle();
+    }
   }
 
   resizeWindow() {
@@ -199,8 +218,7 @@ export default class Deviceful {
           action.timeScale = this.settings.toggleSpeed;
           this.action = action;
         }
-
-        this.settings.onLoad();
+        this.init();
       },
       function (xhr) {
         // console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
@@ -235,70 +253,134 @@ export default class Deviceful {
 
     if (this.settings.cameraHeight) {
       this.camera.position.y = this.settings.cameraHeight;
-      console.log(this.camera.position);
     }
   }
 
   swapTimeScale() {
     this.currentlyAnimating = false;
     this.action.timeScale *= -1;
-    this.chainAnim();
-    this.chainAnim = () => {};
   }
 
   toggle() {
-    if (this.currentlyAnimating) {
-      this.chainAnim = () => this.toggle();
-    }
     this.currentlyAnimating = true;
     this.action.play();
     this.action.paused = false;
   }
 
-  swivel(
-    deg = 30,
-    duration = 1000,
-    easing = "easeOutQuad",
-    callback = () => {}
-  ) {
-    const start = this.model.rotation.y;
-    const finish = ThreeMath.degToRad(deg);
+  // swivel(action) {
+  //   const animAction = {
+  //     deg: 30,
+  //     duration: 1000,
+  //     toggle: false,
+  //     easing: "easeOutQuad",
+  //     ...action,
+  //   };
 
-    tween({
-      from: { deg: start },
-      to: { deg: finish },
-      duration,
-      easing,
-      step: (state) => (this.model.rotation.y = state.deg),
-    }).then(() => callback());
-  }
+  //   const { deg, duration, toggle, easing } = animAction;
 
-  scroll(speed, direction = "forwards") {
-    const aspect = this.deviceHeight / this.settings.screenshotHeight;
-    const fromY = direction === "forwards" ? 0 : 1 - aspect;
-    const toY = direction === "forwards" ? 1 - aspect : 0;
+  //   const start = this.model.rotation.y;
+  //   let finish = ThreeMath.degToRad(deg);
 
-    tween({
-      from: { y: fromY },
-      to: { y: toY },
-      duration: speed,
-      easing: "easeOutQuad",
-      step: (state) => (this.texture.offset.y = state.y),
+  //   if (toggle && start === finish) {
+  //     finish = start - finish;
+  //   }
+
+  //   this.tweenable.tween({
+  //     from: { deg: start },
+  //     to: { deg: finish },
+  //     duration,
+  //     easing,
+  //     step: (state) => {
+  //       this.model.rotation.y = state.deg;
+  //     },
+  //   });
+  // }
+
+  // scroll(speed, direction = "forwards") {
+  //   const aspect = this.deviceHeight / this.settings.screenshotHeight;
+  //   const fromY = direction === "forwards" ? 0 : 1 - aspect;
+  //   const toY = direction === "forwards" ? 1 - aspect : 0;
+
+  //   this.tweenable.tween({
+  //     from: { y: fromY },
+  //     to: { y: toY },
+  //     duration: speed,
+  //     easing: "easeOutQuad",
+  //     step: (state) => (this.texture.offset.y = state.y),
+  //   });
+  // }
+
+  // pan(distance = 0, duration = 0, easing = "easeOutQuad") {
+  //   const start = this.camera.position.y;
+  //   const finish = this.camera.position.y + distance;
+  //   this.tweenable.tween({
+  //     from: { y: start },
+  //     to: { y: finish },
+  //     duration,
+  //     easing,
+  //     step: (state) => {
+  //       this.camera.position.y = state.y;
+  //     },
+  //   });
+  // }
+
+  animate(anims) {
+    anims.forEach((anim) => {
+      const animAction = {
+        object: "camera",
+        move: "position",
+        axis: "y",
+        from: null,
+        to: null,
+        duration: 1000,
+        delay: 0,
+        easing: "easeOutQuad",
+        compound: true,
+        ...anim,
+      };
+      const { object, move, axis, duration, easing, delay } = animAction;
+      const currentValue = this[object][move][axis];
+
+      let from = animAction.from || currentValue;
+      from =
+        move === "rotation" && animAction.from === null
+          ? ThreeMath.radToDeg(from)
+          : from;
+
+      let to = animAction.to || currentValue;
+      to =
+        move === "rotation" && animAction.to === null
+          ? ThreeMath.radToDeg(to)
+          : to;
+
+      let forward;
+
+      if (animAction.from === null && animAction.to) {
+        forward = true;
+      } else if (animAction.to === null && animAction.from) {
+        forward = false;
+      }
+
+      const track = new Tweenable(
+        { v: forward ? from : from + to },
+        {
+          to: { v: forward ? from + to : to },
+          duration,
+          easing,
+          step: (state) => {
+            this[object][move][axis] =
+              move === "rotation" ? ThreeMath.degToRad(state.v) : state.v;
+          },
+        }
+      );
+
+      this.tweenMixer.add(track);
+      this.tweenMixer.play();
     });
   }
 
-  pan(distance = 0, duration = 0, easing = "easeOutQuad") {
-    const start = this.camera.position.y;
-    const finish = this.camera.position.y + distance;
-    tween({
-      from: { y: start },
-      to: { y: finish },
-      duration,
-      easing,
-      step: (state) => {
-        this.camera.position.y = state.y;
-      },
-    });
+  play() {
+    console.log(this.tweenMixer.tweenables.length);
   }
 
   loop() {
@@ -307,6 +389,9 @@ export default class Deviceful {
     this.renderer.render(this.scene, this.camera);
     if (this.mixer) {
       this.mixer.update(clock.getDelta());
+    }
+    if (this.tweenMixer.tweenables.length && !this.tweenMixer.isPlaying()) {
+      this.tweenMixer.empty();
     }
   }
 }
