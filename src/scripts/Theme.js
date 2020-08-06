@@ -40,10 +40,10 @@ export default class Theme {
       );
       directionalLight.position.set(x, y, z);
       directionalLight.castShadow = light.shadows;
-      directionalLight.shadow.mapSize = new THREE.Vector2(2048, 2048);
+      directionalLight.shadow.mapSize = new THREE.Vector2(1024, 1024);
 
       directionalLight.shadow.camera.near = 0.1;
-      directionalLight.shadow.camera.far = 1500;
+      directionalLight.shadow.camera.far = 100;
       directionalLight.shadow.camera.left = d * -1;
       directionalLight.shadow.camera.right = d;
       directionalLight.shadow.camera.top = d;

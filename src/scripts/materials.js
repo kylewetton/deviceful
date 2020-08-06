@@ -1,4 +1,10 @@
-import * as THREE from "three";
+import {
+  Color,
+  MeshPhongMaterial,
+  MeshPhysicalMaterial,
+  CubeTextureLoader,
+  sRGBEncoding,
+} from "three";
 
 const r = "node_modules/deviceful/public/env/studio-a/";
 const urls = [
@@ -9,70 +15,89 @@ const urls = [
   `${r}pz.png`,
   `${r}nz.png`,
 ];
-const textureCube = new THREE.CubeTextureLoader().load(urls);
+const textureCube = new CubeTextureLoader().load(urls);
+textureCube.encoding = sRGBEncoding;
 
-const spaceGray = new THREE.MeshPhysicalMaterial({
-  color: "#858a8b",
+/**
+ * Colors
+ */
+
+const spaceGrayColor = new Color(0xa9afb0);
+spaceGrayColor.convertSRGBToLinear();
+
+const spaceBlackColor = new Color(0x333333);
+spaceBlackColor.convertSRGBToLinear();
+
+const backWhiteColor = new Color(0xf5f4eb);
+backWhiteColor.convertSRGBToLinear();
+
+const whiteColor = new Color(0xffffff);
+whiteColor.convertSRGBToLinear();
+
+const blackGlossColor = new Color(0x111111);
+blackGlossColor.convertSRGBToLinear();
+
+/**
+ * Materials
+ */
+
+const spaceGray = new MeshPhysicalMaterial({
+  color: spaceGrayColor,
   envMap: textureCube,
   metalness: 1,
-  roughness: 0.5,
-  reflectivity: 2,
-  opacity: 1,
-  envMapIntensity: 3,
-  premultipliedAlpha: true,
+  roughness: 0.35,
+  envMapIntensity: 5,
 });
 
-const backWhite = new THREE.MeshPhysicalMaterial({
-  color: "#f5f4eb",
+const backWhite = new MeshPhysicalMaterial({
+  color: backWhiteColor,
   envMap: textureCube,
   metalness: 1,
   roughness: 0,
   reflectivity: 2,
-  opacity: 1,
   envMapIntensity: 2.5,
-  premultipliedAlpha: true,
 });
 
-const chrome = new THREE.MeshPhysicalMaterial({
-  color: "#ffffff",
+const chrome = new MeshPhysicalMaterial({
+  color: whiteColor,
   envMap: textureCube,
   metalness: 1,
   roughness: 0,
   reflectivity: 3,
-  opacity: 1,
   envMapIntensity: 1.5,
-  premultipliedAlpha: true,
 });
 
-const spaceBlack = new THREE.MeshPhysicalMaterial({
-  color: "#333333",
+const spaceBlack = new MeshPhysicalMaterial({
+  color: spaceBlackColor,
   envMap: textureCube,
   metalness: 1,
   roughness: 0,
   reflectivity: 2,
-  opacity: 1,
   envMapIntensity: 3,
-  premultipliedAlpha: true,
 });
 
-const glass = new THREE.MeshPhysicalMaterial({
-  color: 0xffffff,
+const glass = new MeshPhysicalMaterial({
+  color: whiteColor,
   envMap: textureCube,
   metalness: 1,
   roughness: 0,
   reflectivity: 2,
-  opacity: 0.15,
+  opacity: 0.1,
   transparent: true,
-  envMapIntensity: 2,
+  envMapIntensity: 2.5,
   premultipliedAlpha: true,
 });
 
-const blackGloss = new THREE.MeshPhongMaterial({
-  color: 0x111111,
+const blackGloss = new MeshPhongMaterial({
+  color: blackGlossColor,
   envMap: textureCube,
   refractionRatio: 1,
   shininess: 100,
 });
+
+/**
+ * Mapping
+ */
 
 const materials = {
   laptop: {
@@ -83,7 +108,7 @@ const materials = {
     camera: blackGloss,
     screen_frame: blackGloss,
     lip_strip: blackGloss,
-    keyboard: new THREE.MeshPhongMaterial({ color: 0x181c20 }),
+    keyboard: new MeshPhongMaterial({ color: spaceBlackColor }),
   },
   phone: {
     body: chrome,

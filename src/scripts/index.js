@@ -1,18 +1,31 @@
-import "../styles/index.scss";
-import * as THREE from "three";
-import { Math as ThreeMath } from "three";
+import {
+  PCFSoftShadowMap,
+  RepeatWrapping,
+  LoopOnce,
+  sRGBEncoding,
+  Math as ThreeMath,
+  Vector3,
+} from "three";
 import { tween } from "shifty";
-import { clock, scene, renderer, camera, loader } from "./runtime";
+import {
+  clock,
+  scene,
+  renderer,
+  camera,
+  loader,
+  textureLoader,
+  screenMaterial,
+  animMixer,
+} from "./runtime";
 import Theme from "./Theme";
 import materials from "./materials";
 
 const defaultTheme = {
-  background: 0x151617,
   lights: [
     {
       id: "hemi",
-      sky: 0xffffff,
-      ground: 0xffffff,
+      sky: 0x333333,
+      ground: 0x333333,
       intensity: 0.5,
       position: { x: 0, y: 50, z: 0 },
     },
@@ -22,15 +35,7 @@ const defaultTheme = {
       intensity: 0.5,
       position: { x: -8, y: 12, z: 8 },
       shadows: true,
-      mapSize: 2048,
-    },
-    {
-      id: "directional",
-      color: 0xffffff,
-      intensity: 0.3,
-      position: { x: 8, y: 12, z: -8 },
-      shadows: false,
-      mapSize: 2048,
+      mapSize: 1024,
     },
   ],
 };
@@ -40,10 +45,11 @@ export default class Deviceful {
     const defaultSettings = {
       parent: "#deviceful",
       device: "laptop",
-      style: "standard",
+      style: "flat",
       rotation: 0,
       enableFloor: false,
       cameraDistance: null,
+      cameraHeight: null,
       devicePosition: 0,
       animateOnLoad: null,
       toggleSpeed: 1,
@@ -95,12 +101,13 @@ export default class Deviceful {
   mount() {
     this.deviceHeight = this.settings.device === "phone" ? 1062 : 900;
     const { width, height } = this.getSize();
-    this.camera = new THREE.PerspectiveCamera(
+    this.camera = camera(
       this.settings.camera[this.settings.style].focalLength,
       width / height,
       0.1,
-      1000
+      100
     );
+
     this.buildScene(width, height);
     this.addModel();
     this.loop();
@@ -148,25 +155,25 @@ export default class Deviceful {
               o.receiveShadow = true;
             }
 
+            if (o.name === "lip_strip") {
+              o.visible = false;
+            }
+
             o.frustumCulled = false;
             o.material =
               materials[this.settings.device][o.name.split("0")[0]] ||
               o.material;
             if (o.name === "screen") {
-              const texture = new THREE.TextureLoader().load(
-                this.settings.screenshot
-              );
-
+              const texture = textureLoader.load(this.settings.screenshot);
+              texture.encoding = sRGBEncoding;
               texture.flipY = false;
-              texture.wrapT = THREE.RepeatWrapping;
+              texture.wrapT = RepeatWrapping;
               texture.repeat.x = 1;
               texture.repeat.y =
                 this.deviceHeight / this.settings.screenshotHeight;
               this.texture = texture;
 
-              const screenshot = new THREE.MeshBasicMaterial({
-                map: texture,
-              });
+              const screenshot = screenMaterial(texture);
 
               o.material = screenshot;
             }
@@ -176,7 +183,7 @@ export default class Deviceful {
         this.scene.add(model);
         this.model = model;
 
-        this.mixer = new THREE.AnimationMixer(model);
+        this.mixer = animMixer(model);
 
         this.mixer.addEventListener("finished", () => this.swapTimeScale());
 
@@ -187,7 +194,7 @@ export default class Deviceful {
           });
           const anim = this.animations.open;
           const action = this.mixer.clipAction(anim);
-          action.loop = THREE.LoopOnce;
+          action.loop = LoopOnce;
           action.clampWhenFinished = true;
           action.timeScale = this.settings.toggleSpeed;
           this.action = action;
@@ -196,7 +203,7 @@ export default class Deviceful {
         this.settings.onLoad();
       },
       function (xhr) {
-        console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
+        // console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
       }
     );
   }
@@ -204,7 +211,7 @@ export default class Deviceful {
   buildScene(width, height) {
     this.renderer.setSize(width, height);
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = PCFSoftShadowMap;
     this.renderer.setPixelRatio(window.devicePixelRatio);
 
     this.el.appendChild(this.renderer.domElement);
@@ -225,6 +232,11 @@ export default class Deviceful {
     this.camera.position.z = this.settings.cameraDistance
       ? this.settings.cameraDistance
       : this.settings.camera[this.settings.style].position.z;
+
+    if (this.settings.cameraHeight) {
+      this.camera.position.y = this.settings.cameraHeight;
+      console.log(this.camera.position);
+    }
   }
 
   swapTimeScale() {
@@ -272,6 +284,20 @@ export default class Deviceful {
       duration: speed,
       easing: "easeOutQuad",
       step: (state) => (this.texture.offset.y = state.y),
+    });
+  }
+
+  pan(distance = 0, duration = 0, easing = "easeOutQuad") {
+    const start = this.camera.position.y;
+    const finish = this.camera.position.y + distance;
+    tween({
+      from: { y: start },
+      to: { y: finish },
+      duration,
+      easing,
+      step: (state) => {
+        this.camera.position.y = state.y;
+      },
     });
   }
 

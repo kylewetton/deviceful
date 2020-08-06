@@ -5,6 +5,7 @@ import {
   PerspectiveCamera,
   TextureLoader,
   MeshBasicMaterial,
+  AnimationMixer,
 } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
@@ -18,22 +19,22 @@ export const renderer = new WebGLRenderer({
   antialias: true,
 });
 
-export const camera = new PerspectiveCamera();
+renderer.gammaFactor = 2.2;
+renderer.gammaOutput = true;
+renderer.powerPreference = "high-performance";
+
+export const camera = (focal, aspect, near, far) =>
+  new PerspectiveCamera(focal, aspect, near, far);
 
 export const textureLoader = new TextureLoader();
 
 export const loader = new GLTFLoader();
 const dracoLoader = new DRACOLoader();
 
-export const screenMaterial = (texture) =>
-  new MeshBasicMaterial({ map: texture });
-
 dracoLoader.setDecoderPath("node_modules/deviceful/public/draco/gltf/");
 loader.setDRACOLoader(dracoLoader);
 
-// const camera = new PerspectiveCamera(
-//   this.settings.camera[this.settings.style].focalLength,
-//   width / height,
-//   0.1,
-//   1000
-// );
+export const screenMaterial = (texture) =>
+  new MeshBasicMaterial({ map: texture });
+
+export const animMixer = (model) => new AnimationMixer(model);
