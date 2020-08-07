@@ -1,5 +1,5 @@
 const tweens = {
-  flyIn: [
+  driveIn: [
     {
       object: "model",
       move: "rotation",
@@ -31,6 +31,46 @@ const tweens = {
       duration: 2000,
       easing: "easeOutQuad",
       from: -5,
+    },
+  ],
+  riseUp: [
+    {
+      object: "camera",
+      move: "position",
+      axis: "y",
+      duration: 1500,
+      easing: "easeOutQuad",
+      from: 2,
+    },
+  ],
+  dropDown: [
+    {
+      object: "camera",
+      move: "position",
+      axis: "y",
+      duration: 1500,
+      easing: "easeOutQuad",
+      from: -1,
+    },
+  ],
+  zoomIn: [
+    {
+      object: "camera",
+      move: "position",
+      axis: "z",
+      duration: 2000,
+      easing: "easeOutQuad",
+      from: 6,
+    },
+  ],
+  zoomOut: [
+    {
+      object: "camera",
+      move: "position",
+      axis: "z",
+      duration: 2000,
+      easing: "easeOutQuad",
+      from: -6,
     },
   ],
 };

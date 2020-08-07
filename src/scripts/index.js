@@ -5,6 +5,7 @@ import {
   sRGBEncoding,
   Math as ThreeMath,
   Vector3,
+  Color,
 } from "three";
 import { Tweenable, Scene as TweenScene, tween } from "shifty";
 import {
@@ -25,8 +26,8 @@ const defaultTheme = {
   lights: [
     {
       id: "hemi",
-      sky: 0x333333,
-      ground: 0x333333,
+      sky: 0xffffff,
+      ground: 0xffffff,
       intensity: 0.5,
       position: { x: 0, y: 50, z: 0 },
     },
@@ -70,10 +71,10 @@ export default class Deviceful {
         },
       },
       floor: {
-        color: "#CBD5E0",
+        color: "#333333",
         depth: 20,
-        shadowOnly: false,
-        shininess: 0,
+        shadowOnly: true,
+        shininess: 1,
         shadowOpacity: 0.1,
       },
     };
@@ -99,7 +100,6 @@ export default class Deviceful {
   }
 
   mount() {
-    console.log(tween);
     this.deviceHeight = this.settings.device === "phone" ? 1062 : 900;
     const { width, height } = this.getSize();
     this.camera = camera(
@@ -190,7 +190,7 @@ export default class Deviceful {
               texture.repeat.x = 1;
               texture.repeat.y =
                 this.deviceHeight / this.settings.screenshotHeight;
-              this.texture = texture;
+              this.screen = texture;
 
               const screenshot = screenMaterial(texture);
 
@@ -267,62 +267,54 @@ export default class Deviceful {
     this.action.paused = false;
   }
 
-  // swivel(action) {
-  //   const animAction = {
-  //     deg: 30,
-  //     duration: 1000,
-  //     toggle: false,
-  //     easing: "easeOutQuad",
-  //     ...action,
-  //   };
+  swivel(action) {
+    const animAction = {
+      object: "model",
+      move: "rotation",
+      axis: "y",
+      to: -30,
+      duration: 1000,
+      easing: "swingTo",
+      compound: true,
+      ...action,
+    };
 
-  //   const { deg, duration, toggle, easing } = animAction;
+    this.animate([animAction]);
+  }
 
-  //   const start = this.model.rotation.y;
-  //   let finish = ThreeMath.degToRad(deg);
+  scroll(action) {
+    const aspect = this.deviceHeight / this.settings.screenshotHeight;
 
-  //   if (toggle && start === finish) {
-  //     finish = start - finish;
-  //   }
+    const animAction = {
+      direction: "down",
+      object: "screen",
+      move: "offset",
+      axis: "y",
+      duration: 1000,
+      easing: "easeInOutQuad",
+      ...action,
+    };
 
-  //   this.tweenable.tween({
-  //     from: { deg: start },
-  //     to: { deg: finish },
-  //     duration,
-  //     easing,
-  //     step: (state) => {
-  //       this.model.rotation.y = state.deg;
-  //     },
-  //   });
-  // }
+    const fromY = animAction.direction === "down" ? 0 : 1 - aspect;
+    const toY = animAction.direction === "down" ? 1 - aspect : 0;
 
-  // scroll(speed, direction = "forwards") {
-  //   const aspect = this.deviceHeight / this.settings.screenshotHeight;
-  //   const fromY = direction === "forwards" ? 0 : 1 - aspect;
-  //   const toY = direction === "forwards" ? 1 - aspect : 0;
+    const { duration, move, axis, easing, object } = animAction;
 
-  //   this.tweenable.tween({
-  //     from: { y: fromY },
-  //     to: { y: toY },
-  //     duration: speed,
-  //     easing: "easeOutQuad",
-  //     step: (state) => (this.texture.offset.y = state.y),
-  //   });
-  // }
-
-  // pan(distance = 0, duration = 0, easing = "easeOutQuad") {
-  //   const start = this.camera.position.y;
-  //   const finish = this.camera.position.y + distance;
-  //   this.tweenable.tween({
-  //     from: { y: start },
-  //     to: { y: finish },
-  //     duration,
-  //     easing,
-  //     step: (state) => {
-  //       this.camera.position.y = state.y;
-  //     },
-  //   });
-  // }
+    const track = new Tweenable(
+      { v: fromY },
+      {
+        to: { v: toY },
+        duration,
+        easing,
+        step: (state) => {
+          this[object][move][axis] =
+            move === "rotation" ? ThreeMath.degToRad(state.v) : state.v;
+        },
+      }
+    );
+    this.tweenMixer.add(track);
+    this.tweenMixer.play();
+  }
 
   animate(anims) {
     anims.forEach((anim) => {
@@ -338,7 +330,15 @@ export default class Deviceful {
         compound: true,
         ...anim,
       };
-      const { object, move, axis, duration, easing, delay } = animAction;
+      const {
+        object,
+        move,
+        axis,
+        duration,
+        easing,
+        delay,
+        compound,
+      } = animAction;
       const currentValue = this[object][move][axis];
 
       let from = animAction.from || currentValue;
@@ -367,20 +367,16 @@ export default class Deviceful {
           to: { v: forward ? from + to : to },
           duration,
           easing,
+          delay,
           step: (state) => {
             this[object][move][axis] =
               move === "rotation" ? ThreeMath.degToRad(state.v) : state.v;
           },
         }
       );
-
       this.tweenMixer.add(track);
-      this.tweenMixer.play();
     });
-  }
-
-  play() {
-    console.log(this.tweenMixer.tweenables.length);
+    this.tweenMixer.play();
   }
 
   loop() {
