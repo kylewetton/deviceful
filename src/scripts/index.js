@@ -4,10 +4,8 @@ import {
   LoopOnce,
   sRGBEncoding,
   Math as ThreeMath,
-  Vector3,
-  Color,
 } from "three";
-import { Tweenable, Scene as TweenScene, tween } from "shifty";
+import { Tweenable, Scene as TweenScene } from "shifty";
 import {
   clock,
   scene,
@@ -48,14 +46,15 @@ export default class Deviceful {
       parent: "#deviceful",
       device: "laptop",
       style: "flat",
-      rotation: 0,
-      enableFloor: false,
+      initialDeviceRotation: 0,
+      initialDevicePosition: 0,
+      enableFloor: true,
       cameraDistance: null,
       cameraHeight: null,
-      devicePosition: 0,
       onLoadAnimation: null,
       toggleSpeed: 1,
       toggleOnLoad: true,
+      scrollOnLoad: null,
       autoHeight: false,
       screenshotHeight: 900,
       camera: {
@@ -100,7 +99,7 @@ export default class Deviceful {
   }
 
   mount() {
-    this.deviceHeight = this.settings.device === "phone" ? 1062 : 900;
+    this.deviceHeight = this.settings.device === "phone" ? 735 : 900;
     const { width, height } = this.getSize();
     this.camera = camera(
       this.settings.camera[this.settings.style].focalLength,
@@ -126,12 +125,16 @@ export default class Deviceful {
       loadingAnim = tweens[loadingAnim] || null;
     }
 
-    if (loadingAnim.length) {
+    if (loadingAnim && loadingAnim.length) {
       this.animate(loadingAnim);
     }
 
     if (this.settings.toggleOnLoad) {
       this.toggle();
+    }
+
+    if (this.settings.scrollOnLoad) {
+      this.scroll(this.settings.scrollOnLoad);
     }
   }
 
@@ -164,8 +167,10 @@ export default class Deviceful {
         model.position.y = this.settings.camera[
           this.settings.style
         ].objectOffset;
-        model.position.x = this.settings.devicePosition;
-        model.rotation.y = ThreeMath.degToRad(this.settings.rotation);
+        model.position.x = this.settings.initialDevicePosition;
+        model.rotation.y = ThreeMath.degToRad(
+          this.settings.initialDeviceRotation
+        );
 
         model.traverse((o) => {
           if (o.isMesh) {
@@ -177,8 +182,6 @@ export default class Deviceful {
             if (o.name === "lip_strip") {
               o.visible = false;
             }
-
-            o.frustumCulled = false;
             o.material =
               materials[this.settings.device][o.name.split("0")[0]] ||
               o.material;
@@ -263,8 +266,10 @@ export default class Deviceful {
 
   toggle() {
     this.currentlyAnimating = true;
-    this.action.play();
-    this.action.paused = false;
+    if (this.action) {
+      this.action.play();
+      this.action.paused = false;
+    }
   }
 
   swivel(action) {
