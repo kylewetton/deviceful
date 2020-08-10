@@ -58,7 +58,7 @@
   "dependencies": {
     "@babel/polyfill": "^7.8.7",
     "core-js": "^3.6.5",
-    "shifty": "^2.9.1",
+    "shifty": "^2.9.2",
     "three": "^0.119.1"
   }
 }

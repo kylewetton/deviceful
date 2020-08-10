@@ -4,7 +4,7 @@ import {
   Vector2,
   PlaneBufferGeometry,
   ShadowMaterial,
-  MeshPhysicalMaterial,
+  MeshLambertMaterial,
   Mesh,
 } from "three";
 
@@ -72,15 +72,12 @@ export default class Theme {
     let floorMaterial;
     if (this.floorSettings.shadowOnly) {
       floorMaterial = new ShadowMaterial();
+      floorMaterial.opacity = this.floorSettings.shadowOpacity;
     } else {
-      floorMaterial = new MeshPhysicalMaterial({
+      floorMaterial = new MeshLambertMaterial({
         color: this.floorSettings.color,
-        reflectivity: 1,
-        roughness: 0,
       });
     }
-
-    floorMaterial.opacity = this.floorSettings.shadowOpacity;
 
     const floor = new Mesh(floorGeometry, floorMaterial);
 

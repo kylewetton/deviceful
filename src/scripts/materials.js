@@ -6,7 +6,9 @@ import {
   sRGBEncoding,
 } from "three";
 
-const r = "node_modules/deviceful/public/env/studio-a/";
+const PATH = "./public";
+
+const r = `${PATH}/env/studio-a/`;
 const urls = [
   `${r}px.png`,
   `${r}nx.png`,

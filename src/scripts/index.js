@@ -20,6 +20,8 @@ import Theme from "./Theme";
 import materials from "./materials";
 import tweens from "./tweenAnims";
 
+const PATH = "./public";
+
 const defaultTheme = {
   lights: [
     {
@@ -96,6 +98,7 @@ export default class Deviceful {
     this.mixer = null;
     this.tweenMixer = new TweenScene();
     this.animations = {};
+    this.loadingPercentage = 0;
   }
 
   mount() {
@@ -119,7 +122,6 @@ export default class Deviceful {
    */
   init() {
     this.loop();
-
     let loadingAnim = this.settings.onLoadAnimation;
     if (typeof loadingAnim === "string") {
       loadingAnim = tweens[loadingAnim] || null;
@@ -152,9 +154,13 @@ export default class Deviceful {
     return { width, height };
   }
 
+  getLoadingPercentage() {
+    return this.loadingPercentage;
+  }
+
   addModel() {
     loader.load(
-      `node_modules/deviceful/public/${this.settings.device}.glb`,
+      `${PATH}/${this.settings.device}.glb`,
       (gltf) => {
         const model = gltf.scene;
         const { animations } = gltf;
@@ -224,7 +230,8 @@ export default class Deviceful {
         this.init();
       },
       function (xhr) {
-        // console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
+        this.loadingPercentage = (xhr.loaded / xhr.total) * 100;
+        ``;
       }
     );
   }
@@ -295,30 +302,37 @@ export default class Deviceful {
       object: "screen",
       move: "offset",
       axis: "y",
-      duration: 1000,
+      duration: 2000,
       easing: "easeInOutQuad",
       ...action,
     };
 
-    const fromY = animAction.direction === "down" ? 0 : 1 - aspect;
     const toY = animAction.direction === "down" ? 1 - aspect : 0;
 
     const { duration, move, axis, easing, object } = animAction;
 
     const track = new Tweenable(
-      { v: fromY },
+      { v: this[object][move][axis] },
       {
         to: { v: toY },
         duration,
         easing,
         step: (state) => {
-          this[object][move][axis] =
-            move === "rotation" ? ThreeMath.degToRad(state.v) : state.v;
+          this[object][move][axis] = state.v;
         },
       }
     );
+    const id = `${object + move + axis}`;
+    track.id = id;
+    if (this.tweenMixer.tweenables.length) {
+      this.tweenMixer.tweenables.forEach((t) => {
+        if (t.id === id) {
+          t.stop(false);
+        }
+      });
+    }
+    track.tween();
     this.tweenMixer.add(track);
-    this.tweenMixer.play();
   }
 
   animate(anims) {
@@ -379,9 +393,18 @@ export default class Deviceful {
           },
         }
       );
+      const id = `${object + move + axis}`;
+      track.id = id;
+      if (this.tweenMixer.tweenables.length) {
+        this.tweenMixer.tweenables.forEach((t) => {
+          if (t.id === id) {
+            t.stop(false);
+          }
+        });
+      }
+      track.tween();
       this.tweenMixer.add(track);
     });
-    this.tweenMixer.play();
   }
 
   loop() {
