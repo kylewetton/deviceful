@@ -3,13 +3,13 @@ import {
   RepeatWrapping,
   LoopOnce,
   sRGBEncoding,
+  Scene,
+  WebGLRenderer,
+  Clock,
   Math as ThreeMath,
 } from "three";
 import { Tweenable, Scene as TweenScene } from "shifty";
 import {
-  clock,
-  scene,
-  renderer,
   camera,
   loader,
   textureLoader,
@@ -87,12 +87,20 @@ export default class Deviceful {
 
     this.deviceScale = {
       laptop: 1,
-      phone: 0.43,
+      phone: 1.2,
     };
 
-    this.scene = scene;
+    this.scene = new Scene();
+    this.clock = new Clock();
     this.camera = null;
-    this.renderer = renderer;
+    this.renderer = new WebGLRenderer({
+      alpha: true,
+      antialias: true,
+    });
+
+    this.renderer.gammaFactor = 2.2;
+    this.renderer.gammaOutput = true;
+    this.renderer.powerPreference = "high-performance";
     this.loop = this.loop.bind(this);
     this.theme = new Theme(defaultTheme, this.settings.floor);
     this.mixer = null;
@@ -102,7 +110,7 @@ export default class Deviceful {
   }
 
   mount() {
-    this.deviceHeight = this.settings.device === "phone" ? 735 : 900;
+    this.deviceHeight = this.settings.device === "phone" ? 790 : 900;
     const { width, height } = this.getSize();
     this.camera = camera(
       this.settings.camera[this.settings.style].focalLength,
@@ -137,6 +145,10 @@ export default class Deviceful {
 
     if (this.settings.scrollOnLoad) {
       this.scroll(this.settings.scrollOnLoad);
+    }
+
+    if (this.cachedAnims) {
+      this.animate(this.cachedAnims);
     }
   }
 
@@ -231,7 +243,6 @@ export default class Deviceful {
       },
       function (xhr) {
         this.loadingPercentage = (xhr.loaded / xhr.total) * 100;
-        ``;
       }
     );
   }
@@ -336,6 +347,13 @@ export default class Deviceful {
   }
 
   animate(anims) {
+    if (!this.model) {
+      /**
+       * Model hasn't been loaded yet, temporarily store it and try again soon
+       */
+      this.cachedAnims = anims;
+      return false;
+    }
     anims.forEach((anim) => {
       const animAction = {
         object: "camera",
@@ -346,7 +364,7 @@ export default class Deviceful {
         duration: 1000,
         delay: 0,
         easing: "easeOutQuad",
-        compound: true,
+        compound: false,
         ...anim,
       };
       const {
@@ -383,7 +401,7 @@ export default class Deviceful {
       const track = new Tweenable(
         { v: forward ? from : from + to },
         {
-          to: { v: forward ? from + to : to },
+          to: { v: forward ? (!compound ? to : from + to) : to },
           duration,
           easing,
           delay,
@@ -412,7 +430,7 @@ export default class Deviceful {
     this.camera.updateProjectionMatrix();
     this.renderer.render(this.scene, this.camera);
     if (this.mixer) {
-      this.mixer.update(clock.getDelta());
+      this.mixer.update(this.clock.getDelta());
     }
     if (this.tweenMixer.tweenables.length && !this.tweenMixer.isPlaying()) {
       this.tweenMixer.empty();

@@ -36,6 +36,9 @@ backWhiteColor.convertSRGBToLinear();
 const whiteColor = new Color(0xffffff);
 whiteColor.convertSRGBToLinear();
 
+const chromeColor = new Color(0xaaaaaa);
+chromeColor.convertSRGBToLinear();
+
 const blackGlossColor = new Color(0x111111);
 blackGlossColor.convertSRGBToLinear();
 
@@ -61,7 +64,7 @@ const backWhite = new MeshPhysicalMaterial({
 });
 
 const chrome = new MeshPhysicalMaterial({
-  color: whiteColor,
+  color: chromeColor,
   envMap: textureCube,
   metalness: 1,
   roughness: 0,
