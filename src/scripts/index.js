@@ -55,7 +55,7 @@ export default class Deviceful {
       cameraHeight: null,
       onLoadAnimation: null,
       toggleSpeed: 1,
-      toggleOnLoad: true,
+      openOnLoad: true,
       scrollOnLoad: null,
       autoHeight: false,
       screenshotHeight: 900,
@@ -107,6 +107,8 @@ export default class Deviceful {
     this.tweenMixer = new TweenScene();
     this.animations = {};
     this.loadingPercentage = 0;
+    this.isOpen = false;
+    this.shouldBeOpen = false;
   }
 
   mount() {
@@ -139,8 +141,8 @@ export default class Deviceful {
       this.animate(loadingAnim);
     }
 
-    if (this.settings.toggleOnLoad) {
-      this.toggle();
+    if (this.settings.openOnLoad) {
+      this.open();
     }
 
     if (this.settings.scrollOnLoad) {
@@ -280,6 +282,7 @@ export default class Deviceful {
   swapTimeScale() {
     this.currentlyAnimating = false;
     this.action.timeScale *= -1;
+    this.isOpen = !this.isOpen;
   }
 
   toggle() {
@@ -288,6 +291,14 @@ export default class Deviceful {
       this.action.play();
       this.action.paused = false;
     }
+  }
+
+  open() {
+    this.shouldBeOpen = true;
+  }
+
+  close() {
+    this.shouldBeOpen = false;
   }
 
   swivel(action) {
@@ -434,6 +445,9 @@ export default class Deviceful {
     }
     if (this.tweenMixer.tweenables.length && !this.tweenMixer.isPlaying()) {
       this.tweenMixer.empty();
+    }
+    if (this.shouldBeOpen !== this.isOpen) {
+      this.toggle();
     }
   }
 }
