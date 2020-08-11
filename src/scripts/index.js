@@ -309,7 +309,6 @@ export default class Deviceful {
       to: -30,
       duration: 1000,
       easing: "swingTo",
-      compound: true,
       ...action,
     };
 
