@@ -4,6 +4,7 @@ import {
   MeshPhysicalMaterial,
   CubeTextureLoader,
   sRGBEncoding,
+  DoubleSide,
 } from "three";
 
 const PATH = "./public";
@@ -54,6 +55,8 @@ const spaceGray = new MeshPhysicalMaterial({
   envMapIntensity: 5,
 });
 
+spaceGray.side = DoubleSide;
+
 const backWhite = new MeshPhysicalMaterial({
   color: backWhiteColor,
   envMap: textureCube,
@@ -71,6 +74,8 @@ const chrome = new MeshPhysicalMaterial({
   reflectivity: 3,
   envMapIntensity: 1.5,
 });
+
+chrome.side = DoubleSide;
 
 const spaceBlack = new MeshPhysicalMaterial({
   color: spaceBlackColor,
