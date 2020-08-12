@@ -1,6 +1,6 @@
 {
   "name": "deviceful",
-  "version": "0.0.1",
+  "version": "0.9.0",
   "description": "Command devices for your designs",
   "scripts": {
     "build": "NODE_ENV=production webpack --config webpack/webpack.config.prod.js  --colors",
@@ -12,7 +12,12 @@
     "type": "git",
     "url": "git+https://github.com/kylewetton/deviceful"
   },
-  "keywords": [],
+  "keywords": [
+    "Deviceful",
+    "Design",
+    "Showcase",
+    "3D"
+  ],
   "author": "Kyle Wetton",
   "bugs": {
     "url": "https://github.com/kylewetton/deviceful"
