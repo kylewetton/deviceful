@@ -16,6 +16,7 @@ export const loader = new GLTFLoader();
 const dracoLoader = new DRACOLoader();
 
 dracoLoader.setDecoderPath("node_modules/deviceful/public/draco/gltf/");
+dracoLoader.preload();
 loader.setDRACOLoader(dracoLoader);
 
 export const screenMaterial = (texture) =>

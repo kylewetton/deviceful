@@ -99,7 +99,7 @@ export default class Deviceful {
     });
 
     this.renderer.gammaFactor = 2.2;
-    this.renderer.gammaOutput = true;
+    this.renderer.outputEncoding = sRGBEncoding;
     this.renderer.powerPreference = "high-performance";
     this.loop = this.loop.bind(this);
     this.theme = new Theme(defaultTheme, this.settings.floor);
@@ -158,6 +158,10 @@ export default class Deviceful {
 
     if (this.cachedAnims) {
       this.animate(this.cachedAnims);
+    }
+
+    if (this.cachedScroll) {
+      this.scroll(this.cachedScroll);
     }
   }
 
@@ -324,6 +328,13 @@ export default class Deviceful {
   }
 
   scroll(action) {
+    if (!this.model) {
+      /**
+       * Model hasn't been loaded yet, temporarily store it and try again soon
+       */
+      this.cachedScroll = action;
+      return false;
+    }
     const aspect = this.deviceHeight / this.settings.screenshotHeight;
 
     const animAction = {
