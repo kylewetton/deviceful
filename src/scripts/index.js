@@ -113,7 +113,9 @@ export default class Deviceful {
 
   mount() {
     if (!this.el) {
-      console.warn("Deviceful couldn't find that parent element.");
+      console.warn(
+        `Deviceful couldn't find the parent element ${this.settings.parent} and will not proceed.`
+      );
       return false;
     }
 
@@ -275,11 +277,12 @@ export default class Deviceful {
     this.camera.position.y = this.settings.camera[
       this.settings.style
     ].position.y;
-    this.camera.position.z = this.settings.cameraDistance
-      ? this.settings.cameraDistance
-      : this.settings.camera[this.settings.style].position.z;
+    this.camera.position.z =
+      this.settings.cameraDistance !== null
+        ? this.settings.cameraDistance
+        : this.settings.camera[this.settings.style].position.z;
 
-    if (this.settings.cameraHeight) {
+    if (this.settings.cameraHeight !== null) {
       this.camera.position.y = this.settings.cameraHeight;
     }
   }
@@ -407,9 +410,9 @@ export default class Deviceful {
 
       let forward;
 
-      if (animAction.from === null && animAction.to) {
+      if (animAction.from === null && animAction.to !== null) {
         forward = true;
-      } else if (animAction.to === null && animAction.from) {
+      } else if (animAction.to === null && animAction.from !== null) {
         forward = false;
       }
 
@@ -426,17 +429,66 @@ export default class Deviceful {
           },
         }
       );
+
       const id = `${object + move + axis}`;
+      let foundSameAxis = false;
       track.id = id;
+
       if (this.tweenMixer.tweenables.length) {
         this.tweenMixer.tweenables.forEach((t) => {
+          /**
+           * Remove an animation track that is currently using the same axis/rotation/object combination
+           */
+
           if (t.id === id) {
-            t.stop(false);
+            foundSameAxis = true;
+            if (forward) {
+              t.stop(false);
+            }
           }
         });
       }
-      track.tween();
+
+      // When its non-forward and there's another axis, don't tween
+
+      if (!forward && foundSameAxis) {
+        // console.log(
+        //   "HALT! Another non-forward animation track is currently using this axis combination"
+        // );
+      } else {
+        track.tween();
+      }
+
       this.tweenMixer.add(track);
+    });
+  }
+
+  getCurrentPositions() {
+    console.table({
+      object: "Camera",
+      position: {
+        x: this.camera.position.x,
+        y: this.camera.position.y,
+        z: this.camera.position.z,
+      },
+      rotation: {
+        x: `${ThreeMath.radToDeg(this.camera.rotation._x)}º`,
+        y: `${ThreeMath.radToDeg(this.camera.rotation._y)}º`,
+        z: `${ThreeMath.radToDeg(this.camera.rotation._z)}º`,
+      },
+    });
+    console.table({
+      object: "Model",
+      position: {
+        x: this.model.position.x,
+        y: this.model.position.y,
+        z: this.model.position.z,
+      },
+      rotation: {
+        x: `${ThreeMath.radToDeg(this.model.rotation._x)}º`,
+        y: `${ThreeMath.radToDeg(this.model.rotation._y)}º`,
+        z: `${ThreeMath.radToDeg(this.model.rotation._z)}º`,
+      },
     });
   }
 
