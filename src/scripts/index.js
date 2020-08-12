@@ -112,6 +112,11 @@ export default class Deviceful {
   }
 
   mount() {
+    if (!this.el) {
+      console.warn("Deviceful couldn't find that parent element.");
+      return false;
+    }
+
     this.deviceHeight = this.settings.device === "phone" ? 790 : 900;
     const { width, height } = this.getSize();
     this.camera = camera(

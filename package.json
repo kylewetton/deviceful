@@ -10,20 +10,12 @@
   "unpkg": "build/deviceful.min.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/wbkd/webpack-starter.git"
+    "url": "git+https://github.com/kylewetton/deviceful"
   },
-  "keywords": [
-    "webpack",
-    "startkit",
-    "frontend",
-    "es6",
-    "javascript",
-    "webdev"
-  ],
+  "keywords": [],
   "author": "Kyle Wetton",
-  "license": "MIT",
   "bugs": {
-    "url": "https://github.com/wbkd/webpack-starter/issues"
+    "url": "https://github.com/kylewetton/deviceful"
   },
   "devDependencies": {
     "@babel/core": "^7.9.6",
