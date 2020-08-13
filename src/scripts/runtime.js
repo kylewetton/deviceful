@@ -7,6 +7,8 @@ import {
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
 
+const PATH = "./public";
+
 export const camera = (focal, aspect, near, far) =>
   new PerspectiveCamera(focal, aspect, near, far);
 
@@ -15,7 +17,7 @@ export const textureLoader = new TextureLoader();
 export const loader = new GLTFLoader();
 const dracoLoader = new DRACOLoader();
 
-dracoLoader.setDecoderPath("node_modules/deviceful/public/draco/gltf/");
+dracoLoader.setDecoderPath(`${PATH}/draco/gltf/`);
 dracoLoader.preload();
 loader.setDRACOLoader(dracoLoader);
 
