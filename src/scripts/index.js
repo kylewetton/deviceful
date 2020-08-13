@@ -125,7 +125,7 @@ export default class Deviceful {
       this.settings.camera[this.settings.style].focalLength,
       width / height,
       0.1,
-      100
+      1000
     );
 
     this.buildScene(width, height);
