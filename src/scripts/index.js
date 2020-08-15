@@ -1,6 +1,5 @@
 /**
- * Dev version test
- * Changing to master should remove this?
+ * Dev version
  */
 import {
   PCFSoftShadowMap,
@@ -113,6 +112,7 @@ export default class Deviceful {
     this.loadingPercentage = 0;
     this.isOpen = false;
     this.shouldBeOpen = false;
+    this.relevant = true;
   }
 
   mount() {
@@ -134,8 +134,11 @@ export default class Deviceful {
 
     this.buildScene(width, height);
     this.addModel();
+    this.monitorRelevance();
+
     // Event listeners
     window.addEventListener("resize", () => this.resizeWindow());
+    window.addEventListener("scroll", () => this.monitorRelevance());
   }
 
   /**
@@ -173,6 +176,17 @@ export default class Deviceful {
     const { width, height } = this.getSize();
     this.renderer.setSize(width, height);
     this.camera.aspect = width / height;
+  }
+
+  monitorRelevance() {
+    /**
+     * Check if the element has scrolled in our out of view,
+     * Stop the loop if the element is no longer relevant
+     */
+    const dimensions = this.el.getBoundingClientRect();
+    const { top, height: elHeight } = dimensions;
+    const { innerHeight } = window;
+    this.relevant = top <= innerHeight && top + elHeight >= 0;
   }
 
   getSize() {
@@ -509,16 +523,19 @@ export default class Deviceful {
 
   loop() {
     requestAnimationFrame(this.loop);
-    this.camera.updateProjectionMatrix();
-    this.renderer.render(this.scene, this.camera);
-    if (this.mixer) {
-      this.mixer.update(this.clock.getDelta());
-    }
-    if (this.tweenMixer.tweenables.length && !this.tweenMixer.isPlaying()) {
-      this.tweenMixer.empty();
-    }
-    if (this.shouldBeOpen !== this.isOpen) {
-      this.toggle();
+
+    if (this.relevant) {
+      this.camera.updateProjectionMatrix();
+      this.renderer.render(this.scene, this.camera);
+      if (this.mixer) {
+        this.mixer.update(this.clock.getDelta());
+      }
+      if (this.tweenMixer.tweenables.length && !this.tweenMixer.isPlaying()) {
+        this.tweenMixer.empty();
+      }
+      if (this.shouldBeOpen !== this.isOpen) {
+        this.toggle();
+      }
     }
   }
 }
