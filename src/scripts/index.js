@@ -1,3 +1,6 @@
+/**
+ * Dev version
+ */
 import {
   PCFSoftShadowMap,
   RepeatWrapping,
