@@ -48,7 +48,7 @@ export default class Theme {
       );
       directionalLight.position.set(x, y, z);
       directionalLight.castShadow = light.shadows;
-      directionalLight.shadow.mapSize = new Vector2(1024, 1024);
+      directionalLight.shadow.mapSize = new Vector2(512, 512);
 
       directionalLight.shadow.camera.near = 0.1;
       directionalLight.shadow.camera.far = 100;

@@ -6,13 +6,12 @@ Command devices for your designs.
 
 ## Changelog
 
-**Current Version – v10.0**
+**Current Version – v0.9.2**
 
-Features:
+Performance improvements:
 
-- Better performance! The canvas will now dynamically stop its render loop when it leaves the frame
-
-## Changelog
+- Each Deviceful will run only when its about to appear inside the viewport, and pauses when it leaves. This should speed up pages that have multiple instances of Deviceful running at once.
+- Device Pixel Ratio is limited to a maximum of 2, some mobiles can have a DPR of up to 5
 
 **v0.9**
 

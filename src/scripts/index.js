@@ -1,6 +1,3 @@
-/**
- * Dev version
- */
 import {
   PCFSoftShadowMap,
   RepeatWrapping,
@@ -129,7 +126,7 @@ export default class Deviceful {
       this.settings.camera[this.settings.style].focalLength,
       width / height,
       0.1,
-      1000
+      250
     );
 
     this.buildScene(width, height);
@@ -176,6 +173,7 @@ export default class Deviceful {
     const { width, height } = this.getSize();
     this.renderer.setSize(width, height);
     this.camera.aspect = width / height;
+    this.camera.updateProjectionMatrix();
   }
 
   monitorRelevance() {
@@ -186,7 +184,10 @@ export default class Deviceful {
     const dimensions = this.el.getBoundingClientRect();
     const { top, height: elHeight } = dimensions;
     const { innerHeight } = window;
-    this.relevant = top <= innerHeight && top + elHeight >= 0;
+    const relevance = top <= innerHeight + 100 && top + elHeight >= 0;
+    if (this.relevant !== relevance) {
+      this.relevant = relevance;
+    }
   }
 
   getSize() {
@@ -251,6 +252,8 @@ export default class Deviceful {
           }
         });
 
+        model.matrixAutoUpdate = false;
+
         this.scene.add(model);
         this.model = model;
 
@@ -279,6 +282,8 @@ export default class Deviceful {
   }
 
   buildScene(width, height) {
+    const pixelRatio =
+      window.devicePixelRatio > 2 ? 2 : window.devicePixelRatio;
     this.renderer.setSize(width, height);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = PCFSoftShadowMap;
@@ -525,14 +530,23 @@ export default class Deviceful {
     requestAnimationFrame(this.loop);
 
     if (this.relevant) {
-      this.camera.updateProjectionMatrix();
+      this.model.updateMatrix();
       this.renderer.render(this.scene, this.camera);
+      /**
+       * The mixer to run the GLTFs open and close animation
+       */
       if (this.mixer) {
         this.mixer.update(this.clock.getDelta());
       }
+      /**
+       * Empty out the tweening mixer if it's got redundant tweens
+       */
       if (this.tweenMixer.tweenables.length && !this.tweenMixer.isPlaying()) {
         this.tweenMixer.empty();
       }
+      /**
+       * Match conditions of open/close state
+       */
       if (this.shouldBeOpen !== this.isOpen) {
         this.toggle();
       }
