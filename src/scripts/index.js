@@ -15,12 +15,11 @@ import {
   textureLoader,
   screenMaterial,
   animMixer,
+  setDecoders,
 } from "./runtime";
 import Theme from "./Theme";
-import materials from "./materials";
+import getMaterials from "./materials";
 import tweens from "./tweenAnims";
-
-const PATH = "./public";
 
 const defaultTheme = {
   lights: [
@@ -59,6 +58,7 @@ export default class Deviceful {
       scrollOnLoad: null,
       autoHeight: false,
       screenshotHeight: 900,
+      path: "./public",
       camera: {
         flat: {
           position: { x: 0, y: -2, z: 25 },
@@ -81,7 +81,10 @@ export default class Deviceful {
     };
 
     this.settings = Object.assign(defaultSettings, settings);
-    this.el = document.querySelector(this.settings.parent);
+    this.el =
+      typeof this.settings.parent === "string"
+        ? document.querySelector(this.settings.parent)
+        : this.settings.parent;
 
     this.deviceHeight = 900;
 
@@ -112,13 +115,22 @@ export default class Deviceful {
     this.relevant = true;
   }
 
-  mount() {
+  mount(lateParent) {
+    if (lateParent) {
+      this.el =
+        typeof lateParent === "string"
+          ? document.querySelector(lateParent)
+          : lateParent;
+    }
     if (!this.el) {
       console.warn(
-        `Deviceful couldn't find the parent element ${this.settings.parent} and will not proceed.`
+        `Deviceful couldn't find the parent element and will not proceed.`
       );
       return false;
     }
+
+    setDecoders(this.settings.path);
+    this.materials = getMaterials(this.settings.path);
 
     this.deviceHeight = this.settings.device === "phone" ? 790 : 900;
     const { width, height } = this.getSize();
@@ -204,7 +216,7 @@ export default class Deviceful {
 
   addModel() {
     loader.load(
-      `${PATH}/${this.settings.device}.glb`,
+      `${this.settings.path}/${this.settings.device}.glb`,
       (gltf) => {
         const model = gltf.scene;
         const { animations } = gltf;
@@ -233,7 +245,7 @@ export default class Deviceful {
               o.visible = false;
             }
             o.material =
-              materials[this.settings.device][o.name.split("0")[0]] ||
+              this.materials[this.settings.device][o.name.split("0")[0]] ||
               o.material;
             if (o.name === "screen") {
               const texture = textureLoader.load(this.settings.screenshot);
@@ -287,7 +299,7 @@ export default class Deviceful {
     this.renderer.setSize(width, height);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = PCFSoftShadowMap;
-    this.renderer.setPixelRatio(window.devicePixelRatio);
+    this.renderer.setPixelRatio(pixelRatio);
 
     this.el.appendChild(this.renderer.domElement);
     const { lights, floor } = this.theme;

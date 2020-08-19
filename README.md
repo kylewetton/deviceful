@@ -6,7 +6,14 @@ Command devices for your designs.
 
 ## Changelog
 
-**Current Version – v0.9.2**
+**Current Version – v0.9.3**
+
+Features:
+
+- React users can now pass a ref.current into the mount method inside useEffect, see the starter below for details
+- You can change the path Deviceful will look for the assets using the new 'path' parameter. Default is "./public"
+
+**v0.9.2**
 
 Performance improvements:
 
