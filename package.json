@@ -1,6 +1,6 @@
 {
   "name": "deviceful",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "description": "Command devices for your designs",
   "scripts": {
     "build": "NODE_ENV=production webpack --config webpack/webpack.config.prod.js  --colors",

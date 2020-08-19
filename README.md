@@ -6,7 +6,7 @@ Command devices for your designs.
 
 ## Changelog
 
-**Current Version – v0.9.3**
+**Current Version – v0.9.4**
 
 Features:
 
