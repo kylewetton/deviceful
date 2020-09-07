@@ -7,7 +7,7 @@
     "start": "webpack-dev-server --open --config webpack/webpack.config.dev.js"
   },
   "main": "src/scripts/index.js",
-  "unpkg": "build/deviceful.min.js",
+  "unpkg": "dist/deviceful.min.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/kylewetton/deviceful"
